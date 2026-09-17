@@ -1,0 +1,22 @@
+# Local test topology. A single, stateless service mirrors the Railway service:
+#   mcp -> the mcp-atlassian server over streamable-HTTP (/mcp), multi-user (per-request Atlassian credentials).
+# The template runs the official image unmodified, configured entirely through environment variables.
+name: mcp-atlassian-railway-test
+
+networks:
+  default:
+    name: mcp-atlassian-railway-test
+
+services:
+  mcp:
+    image: ghcr.io/sooperset/mcp-atlassian:0.23.1@sha256:5b7c9b64d4eb3210cab74be8bf3e6aeea9ed14f3042dc59ba5c5287bd4dbe466
+    restart: unless-stopped
+    environment:
+      TRANSPORT: streamable-http
+      PORT: '9000'
+      # Stateless streamable-HTTP: no session state is kept between requests (good for a horizontally scalable,
+      # ephemeral deployment). Each request carries its own Atlassian credential.
+      STATELESS: 'true'
+      # READ_ONLY_MODE: 'true'   # optional: expose only read tools
+    ports:
+      - '127.0.0.1:${MCP_TEST_PORT:-19000}:9000'
